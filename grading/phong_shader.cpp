@@ -13,14 +13,39 @@ Shade_Surface(const Ray& ray,const vec3& intersection_point,
 	vec3 differ;
 	vec3 specular;	
 	Ray shadowray;
-	Light *light_ptr;
-   
+	Light *light_ptr;  
+
+
+
 	for(unsigned i = 0; i < world.lights.size(); ++i){
+		Hit shadowhit;
+		shadowray.endpoint = intersection_point;
 		light_ptr = world.lights.at(i);
-		double diffMax = std::max(dot(normal.normalized(), -(intersection_point - (light_ptr -> position)).normalized()), 0.0);
 		vec3 L = light_ptr -> position - intersection_point;
-		double specMax = pow(std::max(dot((intersection_point - ray.endpoint).normalized(), (L - 2 * dot(L, normal)*normal).normalized() ), 0.0), specular_power);		  differ = differ + color_diffuse * light_ptr -> Emitted_Light(intersection_point - light_ptr -> position) * diffMax;
-		specular = specular + color_specular * light_ptr -> Emitted_Light(intersection_point - light_ptr -> position) * specMax;
+		shadowray.direction = L.normalized();
+		shadowhit = world.Closest_Intersection(shadowray);
+		if(world.enable_shadows){
+			if(shadowhit.object != NULL){
+				if(shadowhit.dist >  L.magnitude()){
+					double diffMax = std::max(dot(normal.normalized(), -(intersection_point - (light_ptr -> position)).normalized()), 0.0);	
+					double specMax = pow(std::max(dot((intersection_point - ray.endpoint).normalized(), (L - 2 * dot(L, normal)*normal).normalized() ), 0.0), specular_power);		  differ = differ + color_diffuse * light_ptr -> Emitted_Light(intersection_point - light_ptr -> position) * diffMax;
+					specular = specular + color_specular * light_ptr -> Emitted_Light(intersection_point - light_ptr -> position) * specMax;
+				}
+			}
+			else{
+				double diffMax = std::max(dot(normal.normalized(), -(intersection_point - (light_ptr -> position)).normalized()), 0.0);	
+				double specMax = pow(std::max(dot((intersection_point - ray.endpoint).normalized(), (L - 2 * dot(L, normal)*normal).normalized() ), 0.0), specular_power);		  differ = differ + color_diffuse * light_ptr -> Emitted_Light(intersection_point - light_ptr -> position) * diffMax;
+				specular = specular + color_specular * light_ptr -> Emitted_Light(intersection_point - light_ptr -> position) * specMax;
+	
+			}
+		}
+		else{
+			
+			double diffMax = std::max(dot(normal.normalized(), -(intersection_point - (light_ptr -> position)).normalized()), 0.0);	
+			double specMax = pow(std::max(dot((intersection_point - ray.endpoint).normalized(), (L - 2 * dot(L, normal)*normal).normalized() ), 0.0), specular_power);		  differ = differ + color_diffuse * light_ptr -> Emitted_Light(intersection_point - light_ptr -> position) * diffMax;
+			specular = specular + color_specular * light_ptr -> Emitted_Light(intersection_point - light_ptr -> position) * specMax;
+		}
+				
 	}
 		
 		
